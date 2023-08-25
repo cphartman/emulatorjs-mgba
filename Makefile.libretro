@@ -398,6 +398,8 @@ else ifeq ($(platform), emscripten)
    ifeq ($(EMULATORJS_THREADS), 1)
       DEFINES += -DUSE_RENDER_THREAD
       LDFLAGS += -pthread
+      CFLAGS += -pthread
+      CXXFLAGS += -pthread
    endif
    STATIC_LINKING = 1
 
