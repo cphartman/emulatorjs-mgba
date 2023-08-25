@@ -70,6 +70,8 @@ LIBRETRO_DIR := libretro
 
 TARGET_NAME := mgba
 
+EMULATORJS_THREADS ?= 0
+
 DEFINES :=
 
 ifeq (,$(findstring msvc,$(platform)))
@@ -393,6 +395,10 @@ else ifeq ($(platform), genode)
 else ifeq ($(platform), emscripten)
    TARGET := $(TARGET_NAME)_libretro_$(platform).bc
    DEFINES += -std=gnu99 -DHAVE_LOCALE -D_GNU_SOURCE -DHAVE_STRTOF_L
+   ifeq ($(EMULATORJS_THREADS), 1)
+      DEFINES += -DUSE_RENDER_THREAD
+      LDFLAGS += -pthread
+   endif
    STATIC_LINKING = 1
 
 # GCW0
