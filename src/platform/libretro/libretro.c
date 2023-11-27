@@ -133,6 +133,26 @@ static int32_t audioLowPassRange = 0;
 static int32_t audioLowPassLeftPrev = 0;
 static int32_t audioLowPassRightPrev = 0;
 
+/*
+static const int keymap[] = {
+	-1, // device A
+	-1, // Device B
+	RETRO_DEVICE_ID_JOYPAD_SELECT,
+	RETRO_DEVICE_ID_JOYPAD_START,
+	RETRO_DEVICE_ID_JOYPAD_RIGHT,
+	RETRO_DEVICE_ID_JOYPAD_LEFT,
+	RETRO_DEVICE_ID_JOYPAD_UP,
+	RETRO_DEVICE_ID_JOYPAD_DOWN,
+	-1, // P2 A
+	-1, // P2 B
+	-1, // P2 Select
+	-1, // P2 Start
+	RETRO_DEVICE_ID_JOYPAD_A,
+	RETRO_DEVICE_ID_JOYPAD_Y,
+	RETRO_DEVICE_ID_JOYPAD_X,
+	RETRO_DEVICE_ID_JOYPAD_B,
+};*/
+
 static const int keymap[] = {
 	RETRO_DEVICE_ID_JOYPAD_A,
 	RETRO_DEVICE_ID_JOYPAD_B,
@@ -142,8 +162,25 @@ static const int keymap[] = {
 	RETRO_DEVICE_ID_JOYPAD_LEFT,
 	RETRO_DEVICE_ID_JOYPAD_UP,
 	RETRO_DEVICE_ID_JOYPAD_DOWN,
+	RETRO_DEVICE_ID_JOYPAD_Y,
+	RETRO_DEVICE_ID_JOYPAD_X,
 	RETRO_DEVICE_ID_JOYPAD_R,
 	RETRO_DEVICE_ID_JOYPAD_L,
+};
+
+enum GBAKey {
+	GBA_KEY_A = 0,
+	GBA_KEY_B = 1,
+	GBA_KEY_SELECT = 2,
+	GBA_KEY_START = 3,
+	GBA_KEY_RIGHT = 4,
+	GBA_KEY_LEFT = 5,
+	GBA_KEY_UP = 6,
+	GBA_KEY_DOWN = 7,
+	GBA_KEY_Y = 8,
+	GBA_KEY_X = 9,
+	GBA_KEY_R = 10,
+	GBA_KEY_L = 11,
 };
 
 #ifndef GIT_VERSION
@@ -1193,6 +1230,7 @@ static void _reloadSettings(void) {
 			model = GB_MODEL_AUTODETECT;
 		}
 
+		model = GB_MODEL_SGB;
 		modelName = GBModelToName(model);
 		mCoreConfigSetDefaultValue(&core->config, "gb.model", modelName);
 		mCoreConfigSetDefaultValue(&core->config, "sgb.model", modelName);
@@ -1563,24 +1601,44 @@ void retro_run(void) {
 		for (i = 0; i < sizeof(keymap) / sizeof(*keymap); ++i) {
 			keys |= ((joypadMask >> keymap[i]) & 1) << i;
 		}
-		// XXX: turbo keys, should be moved to frontend
-#define JOYPAD_BIT(BUTTON) (1 << RETRO_DEVICE_ID_JOYPAD_ ## BUTTON)
-		keys |= cycleturbo(joypadMask & JOYPAD_BIT(X), joypadMask & JOYPAD_BIT(Y), joypadMask & JOYPAD_BIT(L2), joypadMask & JOYPAD_BIT(R2));
-#undef JOYPAD_BIT
+
 	} else {
 		for (i = 0; i < sizeof(keymap) / sizeof(*keymap); ++i) {
 			keys |= (!!inputCallback(0, RETRO_DEVICE_JOYPAD, 0, keymap[i])) << i;
 		}
-		// XXX: turbo keys, should be moved to frontend
-		keys |= cycleturbo(
-			inputCallback(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X),
-			inputCallback(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y),
-			inputCallback(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2),
-			inputCallback(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2)
-		);
 	}
 
-	core->setKeys(core, keys);
+	// Remap keys to new inputs
+	int p2_keys = 0;
+
+	// Retroarch has mapped this to bit ordering of keymap
+	// Map the retroarch input to the super gb inputs
+	if( keys & (1<<GBA_KEY_A) ) {
+		p2_keys |= 1<<GBA_KEY_RIGHT;
+		keys ^= (1<<GBA_KEY_A);
+	}
+	if( keys & (1<<GBA_KEY_B) ) {
+		p2_keys |= 1<<GBA_KEY_DOWN;
+		keys ^= (1<<GBA_KEY_B);
+	}
+	if( keys & (1<<GBA_KEY_X) ) {
+		p2_keys |= 1<<GBA_KEY_UP;
+	}
+	if( keys & (1<<GBA_KEY_Y) ) {
+		p2_keys |= 1<<GBA_KEY_LEFT;
+	}
+	if( keys & (1<<GBA_KEY_R) ) {
+		p2_keys |= 1<<GBA_KEY_START;
+	}
+	if( keys & (1<<GBA_KEY_L) ) {
+		p2_keys |= 1<<GBA_KEY_SELECT;
+	}
+	//int p2_keys = keys >> 8;
+	core->setKeys(core, p2_keys, 2);
+
+	// Keys are translated into the Joypad format
+	// [down/up/left/right/start/select/b/a]
+	core->setKeys(core, keys, 0);
 
 	if (!luxSensorUsed) {
 		static bool wasAdjustingLux = false;

@@ -506,7 +506,7 @@ void GBIOWrite(struct GB* gb, unsigned address, uint8_t value) {
 	gb->memory.io[address] = value;
 }
 
-static uint8_t _readKeys(struct GB* gb) {
+/*static uint8_t _readKeys(struct GB* gb) {
 	uint8_t keys = *gb->keySource;
 	if (gb->sgbCurrentController != 0) {
 		keys = 0;
@@ -522,6 +522,36 @@ static uint8_t _readKeys(struct GB* gb) {
 	case 0x10:
 		break;
 	case 0x00:
+		keys |= keys >> 4;
+		break;
+	}
+	gb->memory.io[GB_REG_JOYP] = (0xCF | joyp) ^ (keys & 0xF);
+	if (joyp & ~gb->memory.io[GB_REG_JOYP] & 0xF) {
+		gb->memory.io[GB_REG_IF] |= (1 << GB_IRQ_KEYPAD);
+		GBUpdateIRQs(gb);
+	}
+	return gb->memory.io[GB_REG_JOYP];
+}*/
+
+static uint8_t i = 0;
+
+static uint8_t _readKeys(struct GB* gb) {
+	// ?: If we could toggle keySource for different controllers this might work with minimal changes
+	uint8_t keys = *gb->keySource;
+	if (gb->sgbCurrentController != 0) {
+		keys = *gb->keySourceP2;
+	}
+	uint8_t joyp = gb->memory.io[GB_REG_JOYP];
+	switch (joyp & 0x30) {
+	case 0x30:  // Retrieve current controller
+		keys = gb->sgbCurrentController;
+		break;
+	case 0x20:  // Directional inputs
+		keys >>= 4;
+		break;
+	case 0x10: // Button Inputs
+		break;
+	case 0x00: // 
 		keys |= keys >> 4;
 		break;
 	}

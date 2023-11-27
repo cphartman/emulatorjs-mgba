@@ -747,25 +747,25 @@ static bool _GBACoreSaveState(struct mCore* core, void* state) {
 	return true;
 }
 
-static void _GBACoreSetKeys(struct mCore* core, uint32_t keys) {
+static void _GBACoreSetKeys(struct mCore* core, uint32_t keys, uint32_t player) {
 	struct GBA* gba = core->board;
 	gba->keysActive = keys;
 	GBATestKeypadIRQ(gba);
 }
 
-static void _GBACoreAddKeys(struct mCore* core, uint32_t keys) {
+static void _GBACoreAddKeys(struct mCore* core, uint32_t keys, uint32_t player) {
 	struct GBA* gba = core->board;
 	gba->keysActive |= keys;
 	GBATestKeypadIRQ(gba);
 }
 
-static void _GBACoreClearKeys(struct mCore* core, uint32_t keys) {
+static void _GBACoreClearKeys(struct mCore* core, uint32_t keys, uint32_t player) {
 	struct GBA* gba = core->board;
 	gba->keysActive &= ~keys;
 	GBATestKeypadIRQ(gba);
 }
 
-static uint32_t _GBACoreGetKeys(struct mCore* core) {
+static uint32_t _GBACoreGetKeys(struct mCore* core, uint32_t player) {
 	struct GBA* gba = core->board;
 	return gba->keysActive;
 }

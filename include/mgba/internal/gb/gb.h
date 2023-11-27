@@ -103,6 +103,7 @@ struct GB {
 	struct mTiming timing;
 
 	uint8_t* keySource;
+	uint8_t* keySourceP2;
 
 	bool isPristine;
 	size_t pristineRomSize;

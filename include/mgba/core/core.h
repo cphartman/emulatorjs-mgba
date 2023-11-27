@@ -103,10 +103,10 @@ struct mCore {
 	bool (*loadState)(struct mCore*, const void* state);
 	bool (*saveState)(struct mCore*, void* state);
 
-	void (*setKeys)(struct mCore*, uint32_t keys);
-	void (*addKeys)(struct mCore*, uint32_t keys);
-	void (*clearKeys)(struct mCore*, uint32_t keys);
-	uint32_t (*getKeys)(struct mCore*);
+	void (*setKeys)(struct mCore*, uint32_t keys, uint32_t player);
+	void (*addKeys)(struct mCore*, uint32_t keys, uint32_t player);
+	void (*clearKeys)(struct mCore*, uint32_t keys, uint32_t player);
+	uint32_t (*getKeys)(struct mCore*, uint32_t player);
 
 	uint32_t (*frameCounter)(const struct mCore*);
 	int32_t (*frameCycles)(const struct mCore*);

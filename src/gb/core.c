@@ -88,6 +88,7 @@ struct GBCore {
 #endif
 	struct mCoreCallbacks logCallbacks;
 	uint8_t keys;
+	uint8_t keysP2;
 	struct mCPUComponent* components[CPU_COMPONENT_MAX];
 	const struct Configuration* overrides;
 	struct mDebuggerPlatform* debuggerPlatform;
@@ -135,6 +136,9 @@ static bool _GBCoreInit(struct mCore* core) {
 
 	gbcore->keys = 0;
 	gb->keySource = &gbcore->keys;
+
+	gbcore->keysP2 = 0;
+	gb->keySourceP2 = &gbcore->keysP2;
 
 #if !defined(MINIMAL_CORE) || MINIMAL_CORE < 2
 	mDirectorySetInit(&core->dirs);
@@ -701,26 +705,49 @@ static bool _GBCoreSaveState(struct mCore* core, void* state) {
 	return true;
 }
 
-static void _GBCoreSetKeys(struct mCore* core, uint32_t keys) {
+static void _GBCoreSetKeys(struct mCore* core, uint32_t keys, uint32_t player) {
+	//mLOG(GB_IO, DEBUG, "_GBCoreSetKeys: %d - %d", player, keys);
+
+	// Keys are already translated into the Joypad format
+	// [down/up/left/right/start/select/b/a]
 	struct GBCore* gbcore = (struct GBCore*) core;
-	gbcore->keys = keys;
+	if (player == 2) {
+		gbcore->keysP2 = keys;
+	} else {
+		gbcore->keys = keys;
+	}
+	GBTestKeypadIRQ(core->board);
+	
+}
+
+static void _GBCoreAddKeys(struct mCore* core, uint32_t keys, uint32_t player) {
+	struct GBCore* gbcore = (struct GBCore*) core;
+	if (player == 2) {
+		gbcore->keysP2 |= keys;
+	} else {
+		gbcore->keys |= keys;
+	}
+
 	GBTestKeypadIRQ(core->board);
 }
 
-static void _GBCoreAddKeys(struct mCore* core, uint32_t keys) {
+static void _GBCoreClearKeys(struct mCore* core, uint32_t keys, uint32_t player) {
 	struct GBCore* gbcore = (struct GBCore*) core;
-	gbcore->keys |= keys;
-	GBTestKeypadIRQ(core->board);
+	
+	if (player == 2) {
+		gbcore->keysP2 &= ~keys;
+	} else {
+		gbcore->keys &= ~keys;
+	}
 }
 
-static void _GBCoreClearKeys(struct mCore* core, uint32_t keys) {
+static uint32_t _GBCoreGetKeys(struct mCore* core, uint32_t player) {
 	struct GBCore* gbcore = (struct GBCore*) core;
-	gbcore->keys &= ~keys;
-}
-
-static uint32_t _GBCoreGetKeys(struct mCore* core) {
-	struct GBCore* gbcore = (struct GBCore*) core;
-	return gbcore->keys;
+	if (player == 2) {
+		return gbcore->keysP2;
+	} else {
+		return gbcore->keys;
+	}
 }
 
 static uint32_t _GBCoreFrameCounter(const struct mCore* core) {
