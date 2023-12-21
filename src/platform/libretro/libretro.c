@@ -1608,36 +1608,22 @@ void retro_run(void) {
 		}
 	}
 
-	// Remap keys to new inputs
+	// Remap retroarch inputs to SGB p2 inputs
 	int p2_keys = 0;
-
-	// Retroarch has mapped this to bit ordering of keymap
-	// Map the retroarch input to the super gb inputs
-	if( keys & (1<<GBA_KEY_A) ) {
-		p2_keys |= 1<<GBA_KEY_RIGHT;
-		keys ^= (1<<GBA_KEY_A);
-	}
-	if( keys & (1<<GBA_KEY_B) ) {
-		p2_keys |= 1<<GBA_KEY_DOWN;
-		keys ^= (1<<GBA_KEY_B);
-	}
 	if( keys & (1<<GBA_KEY_X) ) {
-		p2_keys |= 1<<GBA_KEY_UP;
+		p2_keys |= 1<<GBA_KEY_A;
 	}
 	if( keys & (1<<GBA_KEY_Y) ) {
-		p2_keys |= 1<<GBA_KEY_LEFT;
+		p2_keys |= 1<<GBA_KEY_B;
 	}
 	if( keys & (1<<GBA_KEY_R) ) {
-		p2_keys |= 1<<GBA_KEY_START;
+		p2_keys |= 1<<GBA_KEY_RIGHT;
 	}
 	if( keys & (1<<GBA_KEY_L) ) {
-		p2_keys |= 1<<GBA_KEY_SELECT;
+		p2_keys |= 1<<GBA_KEY_LEFT;
 	}
-	//int p2_keys = keys >> 8;
+	
 	core->setKeys(core, p2_keys, 2);
-
-	// Keys are translated into the Joypad format
-	// [down/up/left/right/start/select/b/a]
 	core->setKeys(core, keys, 0);
 
 	if (!luxSensorUsed) {
